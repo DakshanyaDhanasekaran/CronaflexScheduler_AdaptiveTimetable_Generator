@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cronaflex Timetable Generator: Final Output</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background-color: #e9ecef; }
+        .header { background-color: #007bff; color: white; padding: 20px; text-align: center; margin-bottom: 20px; }
+        .container { max-width: 1300px; margin: 20px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+        h2 { color: #007bff; border-bottom: 2px solid #ced4da; padding-bottom: 10px; margin-top: 30px; }
+        /* Form & Flash Messages */
+        .input-form { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn-submit { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .flash { padding: 15px; margin-bottom: 20px; border-radius: 6px; font-weight: bold; font-size: 1.1em;}
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;}
+        .flash.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;}
+        /* Status Boxes & Tables */
+        .status-box { padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 1.2em; }
+        .status-pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .report-table th, .report-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .report-table th { background-color: #007bff; color: white; }
+        .HARD-VIOLATION { background-color: #ffcccc; }
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .schedule-table th, .schedule-table td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 0.9em; }
+        .schedule-table th { background-color: #007bff; color: white; }
+        /* Tooltip styling for clarity */
+        .schedule-table td[title] { cursor: help; } 
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Cronaflex Timetable Generator: Final Output</h1>
+        <p>Demonstrates data validation and generates the final scheduled timetable with 11 staff.</p>
+    </div>
+
+    <div class="container">
+        <div class="input-form">
+            <h2>Step 1: Provide Faculty Input (Constraint Check)</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                
+                <div class="form-group">
+                    <label for="staff_id_selected">Faculty to Check (Workload Constraint Target):</label>
+                    <select id="staff_id_selected" name="staff_id_selected" required>
+                        {% for s_id, s_name, dept in staff_list %}
+                            <option value="{{ s_id }}" {% if s_id == 'T101' %}selected{% endif %}>
+                                {{ s_name }} ({{ s_id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="max_workload">Max Weekly Workload for SELECTED Staff (Constraint):</label>
+                    <input type="number" id="max_workload" name="max_workload" value="40" required>
+                    <small>The pipeline assigns **34 hours** of subjects. The validation checks if the workload entered here is &ge; 34.</small>
+                </div>
+                
+                <button type="submit" class="btn-submit">Run Validation & Schedule</button>
+            </form>
+        </div>
+
+        {% if data %}
+            
+            <h2 style="text-align: center;">--- PIPELINE RESULTS ---</h2>
+
+            <div class="status-box {% if data.validation.summary.can_proceed %}status-pass{% else %}status-fail{% endif %}">
+                {% if data.validation.summary.can_proceed %}
+                    ✅ **CONSTRAINTS VALIDATED: YES.** (Hard Violations: 0). Proceeding to Scheduling.
+                {% else %}
+                    ❌ **CONSTRAINTS VALIDATED: NO.** (Hard Violations: {{ data.validation.summary.hard_fails }}). Scheduling BLOCKED.
+                {% endif %}
+            </div>
+
+            {% if not data.validation.summary.can_proceed %}
+                <h3>Validation Errors Detected:</h3>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Error Type</th>
+                            <th>Rule Violated</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for issue in data.validation.report %}
+                        <tr class="{{ issue.type }}">
+                            <td>{{ issue.type }}</td>
+                            <td>{{ issue.rule }}</td>
+                            <td>{{ issue.details }} (Affects **{{ issue.entity }}**)</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+            
+            <div style="margin-top: 30px;">
+                {% if data.final_schedule and data.validation.summary.can_proceed %}
+                    <h2>Final Timetable Output</h2>
+                    <p>Generated by the **Genetic Algorithm** (Time: {{ data.final_schedule.run_time }}). Hover over any subject to see the Staff ID(s).</p>
+                    
+                    {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] %}
+                    {% set periods = [
+                        ('9:00', '9:50 AM (P1)'), 
+                        ('9:50', '10:40 AM (P2)'), 
+                        ('10:40', '11:30 AM (P3)'), 
+                        ('11:40', '12:30 PM (P4)'), 
+                        ('12:30', '1:20 PM (P5)'), 
+                        ('14:00', '2:50 PM (P6)'), 
+                        ('14:50', '3:40 PM (P7)'), 
+                        ('15:40', '4:30 PM (P8)')
+                    ] %}
+
+                    <table class="schedule-table">
+                        <thead>
+                            <tr style="background-color: #007bff; color: white;">
+                                <th>Day</th>
+                                <th colspan="3">Morning Sessions</th>
+                                <th style="background-color: #3f51b5;">Break (10 Min)</th>
+                                <th colspan="2">Pre-Lunch Sessions</th>
+                                <th style="background-color: #3f51b5;">Lunch (40 Min)</th>
+                                <th colspan="3">Afternoon Sessions</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                {% for p_time, p_label in periods %}
+                                    <th style="font-size: 0.9em;">{{ p_label }}</th>
+                                    {% if p_time == '10:40' %} <th>11:30-11:40</th> {% endif %}
+                                    {% if p_time == '12:30' %} <th>1:20-2:00</th> {% endif %}
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in days %}
+                            <tr>
+                                <td style="font-weight: bold; background-color: #f8f9fa;">{{ day }}</td>
+                                
+                                {% for p_time, p_label in periods %}
+                                    {% set key = (day, p_time) %}
+                                    {% set assignment = data.final_schedule.schedule.get(key) %}
+                                    
+                                    {# HOVER/TOOLTIP IMPLEMENTATION: Shows Faculty ID(s) #}
+                                    <td title="Staff ID(s): {{ assignment.faculty if assignment else 'N/A' }}"> 
+                                    
+                                        {% if assignment.subject == 'Library' %}
+                                            <span style="font-weight: bold; color: green;">LIBRARY</span>
+                                        {% elif assignment.subject and ('Lab' in assignment.subject) %}
+                                            <span style="font-weight: bold; color: #dc3545;">{{ assignment.subject }}</span>
+                                        {% elif assignment %}
+                                            {{ assignment.subject }}
+                                        {% else %}
+                                            
+                                        {% endif %}
+                                    </td>
+                                    
+                                    {# Insert Break and Lunch columns after specific periods #}
+                                    {% if p_time == '10:40' %} 
+                                        <td style="background-color: #ffe0b2; color: #795548; font-size: 0.8em; font-weight: bold;">BREAK</td>
+                                    {% endif %}
+                                    {% if p_time == '12:30' %} 
+                                        <td style="background-color: #a5d6a7; color: #388e3c; font-size: 0.8em; font-weight: bold;">LUNCH</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                {% else %}
+                    <h3 class="status-box status-fail">Scheduling BLOCKED. Fix the input errors above to generate a timetable.</h3>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
