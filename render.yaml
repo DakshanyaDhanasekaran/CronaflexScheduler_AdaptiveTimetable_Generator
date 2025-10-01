@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: cronaflex-scheduler
+    env: python
+    region: frankfurt  # or your preferred region
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+    pythonVersion: "3.10"  # or whatever Python version you're using
+    envVars:
+      - key: FLASK_SECRET_KEY
+        fromDatabase: true
+      - key: FLASK_DEBUG
+        fromDatabase: true
