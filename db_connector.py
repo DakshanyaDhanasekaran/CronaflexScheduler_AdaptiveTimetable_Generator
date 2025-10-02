@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import sqlite3
 import json
 import os
@@ -117,7 +116,6 @@ def insert_all_subjects():
         subject_counter += 1
 
     conn.commit()
-=======
 import sqlite3
 import json
 import os
@@ -236,5 +234,4 @@ def insert_all_subjects():
         subject_counter += 1
 
     conn.commit()
->>>>>>> 2c2f59cbed0206238ef81bae59663e5c2949a2b9
     return TOTAL_REQUIRED_HOURS

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from db_connector import get_db_connection
 
 def validate_max_workload(conn, report, selected_staff_id, total_required_hours):
@@ -30,7 +29,7 @@ def run_validation(selected_staff_id, total_required_hours):
     validate_max_workload(conn, validation_report, selected_staff_id, total_required_hours)
     
     conn.close()
-=======
+
 from db_connector import get_db_connection
 
 def validate_max_workload(conn, report, selected_staff_id, total_required_hours):
@@ -62,5 +61,5 @@ def run_validation(selected_staff_id, total_required_hours):
     validate_max_workload(conn, validation_report, selected_staff_id, total_required_hours)
     
     conn.close()
->>>>>>> 2c2f59cbed0206238ef81bae59663e5c2949a2b9
+
     return validation_report
