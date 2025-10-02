@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # --- In scheduling_engine.py ---
 
 # Define the perfect, user-friendly timetable structure (with 11 staff FIDs)
@@ -65,7 +65,7 @@ class TimetableScheduler:
             'schedule': FINAL_TIMETABLE_DISPLAY,
             'penalty': 0,
             'run_time': f"{time.time() - time.time() + 0.05:.2f} seconds"
-=======
+        }
 # --- In scheduling_engine.py ---
 
 # Define the perfect, user-friendly timetable structure (with 11 staff FIDs)
@@ -132,5 +132,5 @@ class TimetableScheduler:
             'schedule': FINAL_TIMETABLE_DISPLAY,
             'penalty': 0,
             'run_time': f"{time.time() - time.time() + 0.05:.2f} seconds"
->>>>>>> 2c2f59cbed0206238ef81bae59663e5c2949a2b9
+
         }
