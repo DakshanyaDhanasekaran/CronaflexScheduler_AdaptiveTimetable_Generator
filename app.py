@@ -38,7 +38,7 @@ def run_pipeline(staff_id_selected, workload):
 def index():
     pipeline_data = None
 
-    # Initialize DB and staff list
+    # Initialize DB and staff list only when page loads
     db_connector.init_db()
     db_connector.insert_faculty_data_all_11("MOCK_ID", 40)
     staff_list = db_connector.get_full_staff_list()
@@ -63,8 +63,7 @@ def ping():
     return "pong"
 
 if __name__ == '__main__':
-    db_connector.init_db()
-    db_connector.clear_data()
+    # ✅ Local run only
     port = int(os.environ.get("PORT", 5000))
     debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() in ("1", "true", "yes")
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
