@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 services:
   - type: web
     name: cronaflex-scheduler
@@ -11,3 +12,18 @@ services:
         fromDatabase: true
       - key: FLASK_DEBUG
         fromDatabase: true
+=======
+services:
+  - type: web
+    name: cronaflex-scheduler
+    env: python
+    region: frankfurt  # or your preferred region
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+    pythonVersion: "3.10"  # or whatever Python version you're using
+    envVars:
+      - key: FLASK_SECRET_KEY
+        fromDatabase: true
+      - key: FLASK_DEBUG
+        fromDatabase: true
+>>>>>>> 2c2f59cbed0206238ef81bae59663e5c2949a2b9
